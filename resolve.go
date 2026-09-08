@@ -6,6 +6,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	vaultpkg "github.com/myszqua/vaultify/vault"
 )
@@ -99,7 +100,10 @@ func (dr *DynamicResolver) resolveVault(token string) (string, error) {
 		key = parts[1]
 	}
 
-	resp, err := dr.vaultClient.ReadSecret(context.Background(), vaultPath)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second) // nolint:mnd
+	defer cancel()
+
+	resp, err := dr.vaultClient.ReadSecret(ctx, vaultPath)
 	if err != nil {
 		return "", fmt.Errorf("vault read %s: %w", vaultPath, err)
 	}

@@ -86,7 +86,7 @@ func run(ctx context.Context, vaultClient vault.Client, logger *zap.Logger) erro
 
 	// Validate that all declared dependencies actually landed in the merged
 	// config, then present the raw values for each one.
-	if err := loader.LoadDependencies(ctx, deps); err != nil {
+	if err := loader.ValidateDependencies(ctx, deps); err != nil {
 		return fmt.Errorf("load dependencies: %w", err)
 	}
 

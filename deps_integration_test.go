@@ -64,7 +64,7 @@ func TestSeamlessDependencyLoading(t *testing.T) {
 		string(models.DependencyRedis),
 	}
 
-	err = loader.LoadDependencies(context.Background(), deps)
+	err = loader.ValidateDependencies(context.Background(), deps)
 	require.NoError(t, err)
 
 	dbConfig, err := loader.GetDependency(string(models.DependencyDatabase))
