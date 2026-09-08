@@ -1,0 +1,5 @@
+address: "https://vault.com"
+timeout: "10s"
+retry_backoff_min: "100ms"
+retry_backoff_max: "400ms"
+debug_mode: true

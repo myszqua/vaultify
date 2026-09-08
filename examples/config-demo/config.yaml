@@ -1,0 +1,12 @@
+# Local (non-secret) service configuration loaded by the FileProvider.
+# Secrets (database, redis, s3) are loaded from Vault via the
+# VaultDependencyProvider and override the defaults defined here.
+logger:
+  level: "info"
+  encoding: "json"
+
+test_struct:
+  name1: a
+  name2: b
+  name3: c
+  name4: d
