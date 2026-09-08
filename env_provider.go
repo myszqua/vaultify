@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 )
 
 // EnvProvider loads configuration from environment variables with an
@@ -116,27 +115,29 @@ func (ep *EnvProvider) Load(_ context.Context) (map[string]any, error) {
 }
 
 // Watch emits periodic change events; env vars are polled.
-func (ep *EnvProvider) Watch(ctx context.Context, events chan<- WatchEvent) error {
+func (ep *EnvProvider) Watch(_ context.Context, _ chan<- WatchEvent) error {
 	ep.logger.Debug("env provider uses polling for watch")
 
-	go func() {
-		ticker := time.NewTicker(5 * time.Second) //nolint:mnd
-		defer ticker.Stop()
+	// todo: implement after vaultify-server
 
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-ep.stopCh:
-				return
-			case <-ticker.C:
-				events <- WatchEvent{
-					Source: ep.Name(),
-					Type:   EventChanged,
-				}
-			}
-		}
-	}()
+	// go func() {
+	//	ticker := time.NewTicker(5 * time.Second) //nolint:mnd
+	//	defer ticker.Stop()
+	//
+	//	for {
+	//		select {
+	//		case <-ctx.Done():
+	//			return
+	//		case <-ep.stopCh:
+	//			return
+	//		case <-ticker.C:
+	//			events <- WatchEvent{
+	//				Source: ep.Name(),
+	//				Type:   EventChanged,
+	//			}
+	//		}
+	//	}
+	// }()
 
 	return nil
 }

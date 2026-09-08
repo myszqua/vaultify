@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"sync"
-
-	"go.uber.org/zap"
 )
 
 // ConfigLoader loads configuration from multiple providers and merges them
@@ -66,7 +64,7 @@ func (cl *ConfigLoader) Load(ctx context.Context) error {
 		if err != nil {
 			cl.logger.Warn("provider ", p.Name(), " load failed: ", err)
 
-			continue
+			return err
 		}
 
 		providerDataList = append(providerDataList, providerData{
@@ -170,8 +168,6 @@ func (cl *ConfigLoader) UnmarshalKey(key string, rawVal any) error {
 		return &ConfigError{Op: "unmarshal_key", Err: ErrKeyNotFound, Key: key}
 	}
 
-	cl.logger.Info("got value", zap.String("key", key), zap.Any("val", val))
-
 	data, err := json.Marshal(val)
 	if err != nil {
 		return &ConfigError{Op: "unmarshal_key", Err: err, Key: key}
@@ -189,10 +185,49 @@ func (cl *ConfigLoader) AllSettings() map[string]any {
 	cl.mu.RLock()
 	defer cl.mu.RUnlock()
 
-	result := make(map[string]any, len(cl.settings))
+	return deepCopy(cl.settings)
+}
 
-	for k, v := range cl.settings {
-		result[k] = v
+func deepCopy(src map[string]any) map[string]any {
+	if src == nil {
+		return nil
+	}
+
+	result := make(map[string]any, len(src))
+
+	for k, v := range src {
+		result[k] = copyValue(v)
+	}
+
+	return result
+}
+
+func copyValue(v any) any { // nolint: ireturn
+	switch val := v.(type) {
+	case map[string]any:
+		return deepCopy(val)
+	case []any:
+		return copySlice(val)
+	case map[any]any:
+		newMap := make(map[any]any, len(val))
+		for k, v := range val {
+			newMap[k] = copyValue(v)
+		}
+
+		return newMap
+	default:
+		return v
+	}
+}
+
+func copySlice(src []any) []any {
+	if src == nil {
+		return nil
+	}
+
+	result := make([]any, len(src))
+	for i, v := range src {
+		result[i] = copyValue(v)
 	}
 
 	return result
@@ -204,7 +239,11 @@ func (cl *ConfigLoader) Reload(ctx context.Context) error {
 		return fmt.Errorf("reload: %w", err)
 	}
 
-	for _, fn := range cl.onReload {
+	cl.mu.RLock()
+	callbacks := append([]func(){}, cl.onReload...)
+	cl.mu.RUnlock()
+
+	for _, fn := range callbacks {
 		fn()
 	}
 
@@ -221,8 +260,8 @@ func (cl *ConfigLoader) OnReload(fn func()) {
 	cl.onReload = append(cl.onReload, fn)
 }
 
-// LoadDependencies validates that each declared dependency exists in config.
-func (cl *ConfigLoader) LoadDependencies(_ context.Context, deps []string) error {
+// ValidateDependencies validates that each declared dependency exists in config.
+func (cl *ConfigLoader) ValidateDependencies(_ context.Context, deps []string) error {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
 
