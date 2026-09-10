@@ -16,4 +16,6 @@ type RedisConfig struct {
 	ReadTimeout           models.Duration `yaml:"read_timeout" json:"read_timeout" default:"3s"`
 	WriteTimeout          models.Duration `yaml:"write_timeout" json:"write_timeout" default:"3s"`
 	ObjectTTL             models.Duration `yaml:"object_ttl" json:"object_ttl" default:"24h"`
+	MinRetryBackoff       models.Duration `yaml:"min_retry_backoff" json:"min_retry_backoff" default:"1s"`
+	MaxRetryBackoff       models.Duration `yaml:"max_retry_backoff" json:"max_retry_backoff" default:"1s"`
 }
